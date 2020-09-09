@@ -1,4 +1,4 @@
-# posapp
+# Point Of Sales App
 Point Of Sales App is a application where the user can order many kind of beverages, add new beverages, and see order history.
 
 ## Features
@@ -9,7 +9,7 @@ Point Of Sales App is a application where the user can order many kind of bevera
 ## Development
 This app was build using Bootsrap 4 and few javascript, for now it only show the interface, this app is still in development
 
-![image](https://github.com/syamsanur/posapp/blob/master/src/assets/posapp.png)
+![image](https://github.com/syamsanur/PointOfSales/blob/master/src/assets/posapp.png)
 
 ## DOM
 The Document Object Model (DOM) is a programming interface for HTML and XML documents.
