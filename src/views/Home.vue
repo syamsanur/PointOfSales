@@ -19,31 +19,48 @@
                         v-model="name"
                         placeholder="Search"
                       ></b-form-input>
-                      <div class="btn btn-outline-primary">
-                        <b-icon icon="search" @click="searchProduct"></b-icon>
+                      <div class="btn btn-outline-primary" @click="getFilter">
+                        <b-icon icon="search"></b-icon>
                       </div>
                     </b-input-group>
                   </div>
                   <div class="col p-3 text-right">
+                    <button class="btn btn-outline-secondary mr-4" @click="resetFilter">Reset</button>
                     <b-dropdown id="dropdown-1" variant="outline-success" right text="Sort">
-                      <b-dropdown-item @click="fetchApi(sortBy=('id_product'))">Default</b-dropdown-item>
+                      <b-dropdown-item @click="getFilter(sortBy=('id_product'))">Default</b-dropdown-item>
                       <b-dropdown-divider></b-dropdown-divider>
-                      <b-dropdown-item @click="fetchApi(sortBy=('name_product'))">Name</b-dropdown-item>
-                      <b-dropdown-item @click="fetchApi(sortBy=('price_product'))">Price</b-dropdown-item>
-                      <b-dropdown-item @click="fetchApi(sortBy=('date_product'))">Date</b-dropdown-item>
-                      <b-dropdown-item @click="fetchApi(sortBy=('name_category'))">Category</b-dropdown-item>
+                      <b-dropdown-item @click="getFilter(sortBy=('name_product'))">Name</b-dropdown-item>
+                      <b-dropdown-item @click="getFilter(sortBy=('price_product'))">Price</b-dropdown-item>
+                      <b-dropdown-item @click="getFilter(sortBy=('date_product'))">Date</b-dropdown-item>
+                      <b-dropdown-item @click="getFilter(sortBy=('name_category'))">Category</b-dropdown-item>
                     </b-dropdown>
                   </div>
                 </div>
               </div>
               <div class="col border">
                 <div class="row justify-content-center align-items-center">
-                  <div class="p-3 text-center" v-if="products.length === 0">
-                    <img src="../assets/pepe_dance.gif" />
+                  <div class="p-3 text-center" v-if="allProduct.length === 0">
                     <h3 class="mt-5"><b>Product not Found</b></h3>
                   </div>
-                  <div v-else class="p-3 text-center" v-for="(item, index) in products" :key="index">
+                  <div v-else class="p-3 text-center" v-for="(item, index) in allProduct" :key="index">
                     <ProductList :product="item" @getId="getDetail" @getId2="itemCart"/>
+                  </div>
+                </div>
+                <!-- <div class="overflow-auto">
+                  <b-pagination
+                    v-model="page"
+                    :total-rows="metaProduct.totalData"
+                    :per-page="metaProduct.limit"
+                  ></b-pagination>
+                  {{this.page}}
+                </div> -->
+                <div class="row">
+                  <div class="col text-center">
+                    <div class="btn-group" role="group" aria-label="Basic example">
+                      <button type="button" class="btn btn-outline-primary" @click="paginationBack"> Back </button>
+                      <button type="button" class="btn btn-outline-primary btn-lg disabled">{{this.page}}</button>
+                      <button type="button" class="btn btn-outline-primary" @click="paginationNext"> Next </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -73,7 +90,8 @@ import Cart from '../components/Cart'
 import AddModal from '../components/AddModal'
 import DetailModal from '../components/DetailModal'
 
-import axios from 'axios'
+// import axios from 'axios'
+import { mapGetters, mapActions } from 'vuex'
 
 export default {
   data () {
@@ -82,16 +100,16 @@ export default {
       products: [],
       limit: 20,
       name: '',
-      sortBy: null,
+      sortBy: 'id_product',
       idProduct: null,
       productId: [],
       meta: [],
-      page: '',
       totalData: null,
       totalPage: null,
       cartProduct: [],
       idProductCart: null,
-      empty: true
+      empty: true,
+      page: 1
     }
   },
   components: {
@@ -103,52 +121,118 @@ export default {
     DetailModal
   },
   methods: {
+
     fetchApi () {
-      axios.get(`http://127.0.0.1:4000/POSAPP/product/getall?sorting=${this.sortBy}&name=${this.name}&typesort=ASC&limit=${this.limit}`).then((response) => {
-        this.products = response.data.data
-        this.page = response.data.meta.page
-        this.totalData = response.data.meta.totalData
-        this.totalPage = response.data.meta.totalPage
-      }).catch((err) => {
-        console.log(err)
-      })
+      this.onGetProduct()
     },
+    getFilter () {
+      const data = {
+        name: this.name,
+        sorting: this.sortBy,
+        page: this.page
+      }
+      this.$router.push({
+        path: '/',
+        query: { name: this.name, page: this.page, sorting: this.sortBy }
+      })
+      this.onFilter(data)
+      // this.name = ''
+    },
+    resetFilter () {
+      const data = {
+        name: '',
+        sorting: 'id_product',
+        page: 1
+      }
+      this.$router.push({
+        path: '/'
+      })
+      this.onFilter(data)
+      this.name = ''
+      this.page = 1
+      this.sortBy = 'id_product'
+    },
+    ...mapActions({
+      onGetProduct: 'Product/getAllProduct',
+      onFilter: 'Product/getFilter',
+      onDetail: 'Product/getDetail'
+    }),
+    paginationBack () {
+      if (this.page <= 1) {
+        alert('first page')
+      } else {
+        this.page -= 1
+        this.getFilter()
+        // this.$router.push({ path: '/', query: { page: this.page } })
+        // this.onPagination(this.page)
+      }
+    },
+    paginationNext () {
+      // this.page += 1
+      if (this.page >= this.allProduct.length) {
+        alert('last page')
+      } else {
+        this.page += 1
+        this.getFilter()
+      }
+    },
+    // fetchApi () {
+    //   axios.get(`http://127.0.0.1:4000/POSAPP/product/getall?sorting=${this.sortBy}&name=${this.name}&typesort=ASC&limit=${this.limit}`).then((response) => {
+    //     this.products = response.data.data
+    //     this.page = response.data.meta.page
+    //     this.totalData = response.data.meta.totalData
+    //     this.totalPage = response.data.meta.totalPage
+    //   }).catch((err) => {
+    //     console.log(err)
+    //   })
+    // },
     toggleMenu () {
       this.isHidden = !this.isHidden
     },
     searchProduct () {
-      if (this.name !== '') {
-        axios.get(`http://127.0.0.1:4000/POSAPP/product/getall?sorting=${this.sortBy}&name=${this.name}&typesort=ASC&page=1&limit=${this.limit}`).then((response) => {
-          this.products = response.data.data
-        // console.log(this.products)
-        }).catch((err) => {
-          console.log(err)
-        })
-        this.products = null
-      } else {
-        this.fetchApi()
-      }
+    //   if (this.name !== '') {
+    //     axios.get(`http://127.0.0.1:4000/POSAPP/product/getall?sorting=${this.sortBy}&name=${this.name}&typesort=ASC&page=1&limit=${this.limit}`).then((response) => {
+    //       this.products = response.data.data
+    //     // console.log(this.products)
+    //     }).catch((err) => {
+    //       console.log(err)
+    //     })
+    //     this.products = null
+    //   } else {
+    //     this.fetchApi()
+    //   }
     },
     getDetail (payload) {
       this.$bvModal.show('detailmodal')
       this.idProduct = payload
-      // console.log(this.idProduct)
-      axios.get(`http://127.0.0.1:4000/POSAPP/product/getproduct/${this.idProduct}`).then((response) => {
-        this.productId = response.data.data[0]
-        // console.log(response.data.data)
-      }).catch((err) => {
-        console.log(err)
-      })
+      this.onDetail(this.idProduct)
     },
     itemCart (payload) {
-      this.empty = false
-      this.idProductCart = payload
-      axios.get(`http://127.0.0.1:4000/POSAPP/product/getproduct/${this.idProductCart}`).then((response) => {
-        this.cartProduct = response.data.data[0]
-        // console.log(this.cartProduct)
-      }).catch((err) => {
-        console.log(err)
-      })
+    //   this.empty = false
+    //   this.idProductCart = payload
+    //   axios.get(`http://127.0.0.1:4000/POSAPP/product/getproduct/${this.idProductCart}`).then((response) => {
+    //     this.cartProduct = response.data.data[0]
+    //     // console.log(this.cartProduct)
+    //   }).catch((err) => {
+    //     console.log(err)
+    //   })
+
+    //   // this.empty = false
+    //   // this.idProductCart = payload
+    //   // const satu = this.dua.filter(e => e.id_product === this.idProductCart)
+    //   // if (satu.length === 0) {
+    //   //   const data = this.products.filter(e => e.id_product === this.idProductCart)
+    //   //   data[0].qty = 1
+    //   //   this.dua = [...this.dua, data[0]]
+    //   // } else {
+    //   //   const tiga = this.dua.map(e => {
+    //   //     if (e.id_product === this.idProductCart) {
+    //   //       e.qty += 1
+    //   //     }
+    //   //     return e
+    //   //   })
+    //   //   this.dua = tiga
+    //   // }
     },
     addToast () {
       this.fetchApi()
@@ -167,6 +251,15 @@ export default {
     reset () {
       this.empty = true
       this.cartProduct = []
+    }
+  },
+  computed: {
+    ...mapGetters({
+      allProduct: 'Product/getAllProduct',
+      metaProduct: 'Product/getProductMeta'
+    }),
+    pagination () {
+      return this.page
     }
   },
   mounted () {

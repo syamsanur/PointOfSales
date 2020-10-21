@@ -42,6 +42,8 @@
 <script>
 import axios from 'axios'
 
+import { mapActions } from 'vuex'
+
 export default {
   data () {
     return {
@@ -84,18 +86,33 @@ export default {
       // this.$bvModal.hide('addmodal')
       // this.$emit('toastAdd')
 
-      axios.post('http://127.0.0.1:4000/POSAPP/product/insert', fd).then((response) => {
-        console.log(fd)
-        this.$bvModal.hide('addmodal')
-        this.$emit('toastAdd')
-        this.image = null
-        this.name_product = null
-        this.price_product = null
-        this.date_product = null
-        this.category_id = null
-      }).catch((err) => {
-        console.log(err)
-      })
+      this.onAddProduct(fd)
+        .then((response) => {
+          alert(response.data.message)
+          this.$bvModal.hide('addmodal')
+          this.$emit('toastAdd')
+          this.image = null
+          this.name_product = null
+          this.price_product = null
+          this.date_product = null
+          this.category_id = null
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+
+      // axios.post('http://127.0.0.1:4000/POSAPP/product/insert', fd).then((response) => {
+      //   console.log(fd)
+      //   this.$bvModal.hide('addmodal')
+      //   this.$emit('toastAdd')
+      //   this.image = null
+      //   this.name_product = null
+      //   this.price_product = null
+      //   this.date_product = null
+      //   this.category_id = null
+      // }).catch((err) => {
+      //   console.log(err)
+      // })
     },
     hideModal () {
       this.$bvModal.hide('addmodal')
@@ -104,7 +121,10 @@ export default {
       this.price_product = null
       this.date_product = null
       this.category_id = null
-    }
+    },
+    ...mapActions({
+      onAddProduct: 'Product/addProduct'
+    })
   },
   mounted () {
     this.getCategory()
